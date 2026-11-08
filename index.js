@@ -71,7 +71,7 @@ const anyOf = a => a[Math.floor(Math.random() * a.length)];
 const shuffled = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const clock = s => Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0');
 
-/* ---------- Sudoku: unique-solution grids in 4 levels, pencil notes, undo, hints; the game in progress is saved ---------- */
+/* ---------- Sudoku: unique-solution grids in 5 levels, pencil notes, undo, hints; the game in progress is saved ---------- */
 const SD_LEVELS = {facile: 40, moyen: 32, difficile: 27, expert: 23, diabolique: 21};  // clues left
 function sdSolve(g, limit = 2) {  // number of solutions (stops at limit); g = 81 numbers, 0 = empty. Bit masks per row / column / box
   const row = Array(9).fill(0), col = Array(9).fill(0), box = Array(9).fill(0), b = i => Math.floor(i / 27) * 3 + Math.floor(i % 9 / 3);
