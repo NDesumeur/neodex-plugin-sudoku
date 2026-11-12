@@ -10,6 +10,7 @@
   "neobase": ">=4.0.0",
   "type": "app",
   "category": "Jeux",
+  "compatibility": ["windows", "linux"],
   "syncMode": "progression",
   "syncInfo": "Meilleurs temps, grilles finies et partie en cours.",
   "mobile": false,
