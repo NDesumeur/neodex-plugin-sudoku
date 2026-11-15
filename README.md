@@ -50,3 +50,8 @@ Meilleurs temps, grilles finies et partie en cours sont enregistrés par NeoDex,
 Dans NeoDex : **NeoStore → À découvrir → Sudoku → Installer**.
 
 Développer un plugin : voir le [SDK NeoDex](https://github.com/NDesumeur/neodex-sdk).
+
+## Nouveau style
+
+- **Le style des applis récentes** : cadres, boutons et police en pixel art.
+- **Une grille claire et grande** : des cases couleur papier, les chiffres donnés en noir et les tiens en bleu, la case choisie en jaune. La grille grandit avec la fenêtre, du petit portable au grand écran.

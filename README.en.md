@@ -50,3 +50,8 @@ Best times, finished grids and the game in progress are stored by NeoDex, backed
 In NeoDex: **NeoStore → Discover → Sudoku → Install**.
 
 Building a plugin: see the [NeoDex SDK](https://github.com/NDesumeur/neodex-sdk).
+
+## New style
+
+- **The style of the recent apps**: pixel art frames, buttons and font.
+- **A clear, big grid**: paper-coloured cells, given numbers in black and yours in blue, the selected cell in yellow. The grid grows with the window, from a small laptop to a big screen.
