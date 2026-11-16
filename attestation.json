@@ -1,9 +1,9 @@
 {
   "pluginId": "neodex.sudoku",
   "repo": "NDesumeur/neodex-plugin-sudoku",
-  "version": "1.2.0",
-  "sha256": "6c5332dbc6d938c71e5f5cb55ca352479ef8153dd72a3abc728d17bc1815b393",
-  "approvedAt": "2026-11-16T04:14:39.868Z",
+  "version": "1.2.1",
+  "sha256": "e1fd03df546e8a7315fac3a8bf04b9fb299ea7c142989524dd3e7ee03c66c245",
+  "approvedAt": "2026-11-16T16:38:51.953Z",
   "neobase": ">=4.0.0",
-  "signature": "OC6GEaLTr2BnM/FcEFf8DpvJwE3w4WcilOJGVtwOqfCeaX5TZHduVzRUyT87ohHsvuB0qHBTkYL1UEHX5SxuBQ=="
+  "signature": "1E7P3AcYXxNd/PRkoCe03GmP3ni4KDZ4VERg9ZrwlTsZAxwAwou1NEl7E1U+w5z5LsvXG4mjka61EOY5CHblBg=="
 }
