@@ -4,6 +4,10 @@ Sudoku grids generated on the fly, always with a single solution, in five levels
 
 *Version française : [README.md](README.md)*
 
+## Hints that explain (new in 1.3.0)
+
+The Hint button no longer gives the number straight away: it shows the technique, like a teacher. The target cell and the useful cells turn green, and a sentence explains it: last empty cell, only possible number, only place in an area, naked pair, number locked on one line of a box. A second click places the number. A wrong cell is pointed out first.
+
 ## The goal
 
 Fill the 9 × 9 grid so that every row, every column and every 3 × 3 box contains the digits 1 to 9 once each.

@@ -4,6 +4,10 @@ Des grilles de sudoku générées à la volée, toujours à solution unique, en 
 
 *English version: [README.en.md](README.en.md)*
 
+## Indices qui expliquent (nouveau en 1.3.0)
+
+Le bouton Indice ne donne plus le chiffre tout de suite : il montre la technique, comme un professeur. La case visée et les cases utiles passent en vert, et une phrase explique : dernière case libre, seul chiffre possible, seule place dans une zone, paire nue, chiffre coincé sur une ligne d’un carré. Un second clic pose le chiffre. Une case fausse est signalée d’abord.
+
 ## Le but
 
 Remplir la grille de 9 × 9 pour que chaque ligne, chaque colonne et chaque carré de 3 × 3 contienne une fois les chiffres de 1 à 9.

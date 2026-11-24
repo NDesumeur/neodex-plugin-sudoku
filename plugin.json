@@ -1,16 +1,19 @@
 {
   "id": "neodex.sudoku",
   "name": "Sudoku",
-  "version": "1.2.2",
+  "version": "1.3.0",
   "author": "NDesumeur",
-  "description": "Des grilles générées à la volée et toujours à solution unique, en cinq niveaux, de Facile (40 chiffres donnés) à Diabolique (21). Notes au crayon qui se nettoient toutes seules, surlignage des cases liées, annulation, indices, erreurs à montrer ou non, jeu complet au clavier ; meilleur temps par niveau et partie en cours gardée. Nouveau style pixel art : grille claire et grande qui suit la taille de la fenêtre, du petit portable au grand écran.",
+  "description": "Des grilles générées à la volée et toujours à solution unique, en cinq niveaux, de Facile (40 chiffres donnés) à Diabolique (21). Notes au crayon qui se nettoient toutes seules, surlignage des cases liées, annulation, indices, erreurs à montrer ou non, jeu complet au clavier ; meilleur temps par niveau et partie en cours gardée. Nouveau style pixel art : grille claire et grande qui suit la taille de la fenêtre, du petit portable au grand écran. Les indices expliquent la technique (paire nue, seule place…) avant de poser le chiffre.",
   "icon": "icon.png",
   "entry": "index.js",
   "view": "sudoku",
   "neobase": ">=4.0.0",
   "type": "app",
   "category": "Jeux",
-  "compatibility": ["windows", "linux"],
+  "compatibility": [
+    "windows",
+    "linux"
+  ],
   "syncMode": "aucune",
   "syncInfo": "Rien n'est synchronisé : tes records restent sur cet appareil.",
   "mobile": false,

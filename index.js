@@ -10,6 +10,7 @@ const HTML = `<div class="appWrap wide">
       <div id="sdPad" data-pxskip></div>
       <div class="row"><button class="btn" id="sdNoteBtn">Notes : non</button><button class="btn" id="sdErase">Effacer</button></div>
       <div class="row"><button class="btn" id="sdUndoBtn">Annuler</button><button class="btn" id="sdHint">Indice</button></div>
+      <div class="sdTip" id="sdTip"></div>
       <label class="check"><input type="checkbox" id="sdErrors" checked> Montrer les erreurs</label>
     </div></div>
   <div class="hint">Clavier : chiffres pour remplir, Maj + chiffre (ou N) pour les notes, flèches pour bouger, Retour arrière pour effacer, Ctrl + Z pour annuler. La grille en cours est gardée.</div>
@@ -25,6 +26,10 @@ const CSS = `.sdMain{display:flex;gap:26px;align-items:flex-start;flex-wrap:wrap
 .sdCell.same{background:#cbbcf2}
 .sdCell.sel{background:#ffe08a;box-shadow:inset 0 0 0 3px #ff8a3a}
 .sdCell.wrong{color:#d4143c;background:#ffd6d6}
+.sdCell.hintC{background:#bfe8c8}
+.sdCell.hintT{background:#7fd890;box-shadow:inset 0 0 0 3px #2a8a3a}
+.sdTip{background:#1c1430;color:#f4eedf;border-left:4px solid #7fd890;padding:8px 10px;line-height:20px}
+.sdTip:empty{display:none}
 .sdNotes{position:absolute;inset:2px;display:grid;grid-template-columns:repeat(3,1fr);font:calc(var(--cs) * .24) var(--text);color:#6a5a8a}
 .sdNotes span{display:grid;place-items:center}
 .sdNotes .hl{color:#1c1430;background:rgba(255,90,217,.35)}
@@ -385,10 +390,46 @@ function sdGenerate(clues) {  // very few clues are not always reachable from on
   return {puz: best.puz, sol: best.sol};
 }
 let sd = null;
+// les indices qui expliquent : on cherche le pas suivant comme un joueur, par la technique la plus simple qui marche
+const SD_UNITS = [...Array(9).keys()].flatMap(k => [
+  {n: 'la ligne ' + (k + 1), c: [...Array(9).keys()].map(j => k * 9 + j)}, {n: 'la colonne ' + (k + 1), c: [...Array(9).keys()].map(j => j * 9 + k)},
+  {n: 'le carré ' + (k + 1), c: [...Array(9).keys()].map(j => (Math.floor(k / 3) * 3 + Math.floor(j / 3)) * 9 + k % 3 * 3 + j % 3)}]);
+const sdBits = m => [1, 2, 3, 4, 5, 6, 7, 8, 9].filter(d => m & (1 << d));
+function sdCands(g) { return g.map((v, i) => { if (v) return 0; let m = 1022; for (const u of SD_UNITS) if (u.c.includes(i)) for (const j of u.c) if (g[j]) m &= ~(1 << g[j]); return m; }); }
+function sdSingle(g, cd) {  // une case trouvée sans rien éliminer de plus
+  for (const u of SD_UNITS) { const e = u.c.filter(i => !g[i]); if (e.length === 1) return {i: e[0], v: sdBits(cd[e[0]])[0], tech: 'dernière', cells: u.c, text: 'Dernière case libre dans ' + u.n + ' : il ne manque que le ' + sdBits(cd[e[0]])[0] + '.'}; }
+  for (let i = 0; i < 81; i++) if (!g[i] && sdBits(cd[i]).length === 1) { const v = sdBits(cd[i])[0]; return {i, v, tech: 'seul', cells: SD_UNITS.filter(u => u.c.includes(i)).flatMap(u => u.c), text: 'Cette case voit déjà tous les autres chiffres dans sa ligne, sa colonne et son carré : il ne reste que le ' + v + '.'}; }
+  for (const u of SD_UNITS) for (let d = 1; d <= 9; d++) { const p = u.c.filter(i => cd[i] & (1 << d)); if (p.length === 1) return {i: p[0], v: d, tech: 'place', cells: u.c, text: 'Dans ' + u.n + ', le ' + d + ' ne peut aller qu’ici : les autres cases libres le voient déjà.'}; }
+  return null;
+}
+function sdTech(g) {
+  const cd = sdCands(g); let s = sdSingle(g, cd); if (s) return s;
+  for (let round = 0; round < 12; round++) {
+    let ev = null;
+    for (const u of SD_UNITS) {  // paire nue : deux cases d'une zone qui ne peuvent être que les deux mêmes chiffres
+      const e = u.c.filter(i => !g[i] && sdBits(cd[i]).length === 2);
+      for (let a = 0; a < e.length && !ev; a++) for (let b = a + 1; b < e.length && !ev; b++) if (cd[e[a]] === cd[e[b]]) {
+        const m = cd[e[a]], hit = u.c.filter(i => i !== e[a] && i !== e[b] && cd[i] & m); if (!hit.length) continue;
+        hit.forEach(i => cd[i] &= ~m); const [x, y] = sdBits(m); ev = {cells: [e[a], e[b]], text: 'Paire nue dans ' + u.n + ' : ces deux cases ne peuvent être que ' + x + ' ou ' + y + ', donc aucune autre case de la zone ne peut les avoir.'};
+      }
+      if (ev) break;
+    }
+    if (!ev) for (const u of SD_UNITS.filter(u => u.n.startsWith('le carré'))) {  // le chiffre d'un carré coincé sur une ligne ou une colonne
+      for (let d = 1; d <= 9 && !ev; d++) { const p = u.c.filter(i => cd[i] & (1 << d)); if (p.length < 2) continue;
+        for (const L of SD_UNITS.filter(v => !v.n.startsWith('le carré') && p.every(i => v.c.includes(i)))) { const hit = L.c.filter(i => !u.c.includes(i) && cd[i] & (1 << d)); if (!hit.length) continue;
+          hit.forEach(i => cd[i] &= ~(1 << d)); ev = {cells: p, text: 'Dans ' + u.n + ', le ' + d + ' est forcément sur ' + L.n + ' : on l’enlève du reste de ' + L.n + '.'}; break; } }
+      if (ev) break;
+    }
+    if (!ev) return null;
+    s = sdSingle(g, cd); if (s) return {...s, tech: 'technique', cells: [...ev.cells, s.i], text: ev.text + ' Ensuite : ' + s.text};
+  }
+  return null;
+}
+let sdHelp = null;  // l'indice expliqué en cours : {i, v, cells}
 function sdNew() {
   const lvl = $('sdLevel').value, {puz, sol} = sdGenerate(SD_LEVELS[lvl]);
   games.sudoku = sd = {lvl, puz, sol, cur: puz.slice(), notes: Array(81).fill(0), secs: 0, mistakes: 0, hints: 0, done: false};
-  sdSel = puz.indexOf(0); sdUndo = []; saveGames(); sdRender();
+  sdSel = puz.indexOf(0); sdUndo = []; sdHelp = null; $('sdTip').textContent = ''; saveGames(); sdRender();
 }
 let sdSel = 0, sdNotes = false, sdUndo = [], sdTimer = null;
 function sdOpen() {
@@ -399,6 +440,7 @@ function sdOpen() {
 setInterval(() => { if (sd && !sd.done && view.classList.contains('on')) { sd.secs++; $('sdTime').textContent = clock(sd.secs); if (sd.secs % 10 === 0) saveGames(); } }, 1000);
 function sdSet(v, note = sdNotes) {
   const i = sdSel; if (!sd || sd.done || sd.puz[i]) return;
+  if (sdHelp && !note) { sdHelp = null; $('sdTip').textContent = ''; }
   sdUndo.push([i, sd.cur[i], sd.notes[i]]); if (sdUndo.length > 300) sdUndo.shift();
   if (note && v) { sd.cur[i] = 0; sd.notes[i] ^= 1 << v; }
   else {
@@ -415,7 +457,7 @@ function sdRender() {
   const show = $('sdErrors').checked, sel = sdSel, sv = sd.cur[sel];
   $('sdGrid').replaceChildren(...sd.cur.map((v, i) => {
     const r = Math.floor(i / 9), c = i % 9, same = Math.floor(r / 3) === Math.floor(sel / 27) && Math.floor(c / 3) === Math.floor(sel % 9 / 3);
-    const cls = ['sdCell', sd.puz[i] ? 'given' : 'user', i === sel ? 'sel' : (r === Math.floor(sel / 9) || c === sel % 9 || same) ? 'near' : '', v && v === sv ? 'same' : '', show && v && !sd.puz[i] && v !== sd.sol[i] ? 'wrong' : '', c % 3 === 2 && c < 8 ? 'br' : '', r % 3 === 2 && r < 8 ? 'bb' : ''];
+    const cls = ['sdCell', sdHelp?.i === i ? 'hintT' : sdHelp?.cells.includes(i) ? 'hintC' : '', sd.puz[i] ? 'given' : 'user', i === sel ? 'sel' : (r === Math.floor(sel / 9) || c === sel % 9 || same) ? 'near' : '', v && v === sv ? 'same' : '', show && v && !sd.puz[i] && v !== sd.sol[i] ? 'wrong' : '', c % 3 === 2 && c < 8 ? 'br' : '', r % 3 === 2 && r < 8 ? 'bb' : ''];
     const d = el('button', cls.filter(Boolean).join(' '));
     if (v) d.textContent = v;
     else if (sd.notes[i]) { const n = el('div', 'sdNotes'); for (let k = 1; k <= 9; k++) n.append(el('span', sv === k ? 'hl' : '', sd.notes[i] & (1 << k) ? String(k) : '')); d.append(n); }
@@ -439,8 +481,14 @@ $('sdErase').onclick = () => { if (sd.puz[sdSel] || sd.done) return; sdUndo.push
 $('sdUndoBtn').onclick = () => { const u = sdUndo.pop(); if (!u || sd.done) return; [sdSel, sd.cur[u[0]], sd.notes[u[0]]] = u; saveGames(); sdRender(); };
 $('sdHint').onclick = () => {
   if (sd.done) return;
-  let i = sdSel; if (sd.cur[i] === sd.sol[i]) i = shuffled([...Array(81).keys()]).find(k => sd.cur[k] !== sd.sol[k]);
-  if (i == null) return; sdSel = i; sd.hints++; sdSet(sd.sol[i], false);
+  // une case fausse d'abord ; un indice déjà expliqué : on pose le chiffre ; sinon on explique le pas suivant
+  const bad = sd.cur.findIndex((v, k) => v && v !== sd.sol[k]);
+  if (bad >= 0) { sdSel = bad; sdHelp = null; $('sdTip').textContent = 'Cette case est fausse : efface-la d’abord.'; return sdRender(); }
+  if (sdHelp && !sd.cur[sdHelp.i]) { sdSel = sdHelp.i; const v = sdHelp.v; sdHelp = null; $('sdTip').textContent = ''; return sdSet(v, false); }
+  const t = sdTech(sd.cur); sd.hints++;
+  if (t) { sdHelp = t; sdSel = t.i; $('sdTip').textContent = t.text + ' (Indice encore une fois pour le poser.)'; }
+  else { const i = sd.cur.findIndex((v, k) => !v); if (i < 0) return; sdHelp = {i, v: sd.sol[i], cells: []}; sdSel = i; $('sdTip').textContent = 'Il faut ici une technique plus avancée. La case en vert vaut ' + sd.sol[i] + ' (Indice encore une fois pour la poser).'; }
+  saveGames(); sdRender();
 };
 document.addEventListener('keydown', e => {
   if (!view.classList.contains('on') || !sd || /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
@@ -451,7 +499,15 @@ document.addEventListener('keydown', e => {
   if (k.toLowerCase() === 'n') return $('sdNoteBtn').click();
   if (e.ctrlKey && k.toLowerCase() === 'z') return $('sdUndoBtn').click();
 });  // (non indenté : les textes sur plusieurs lignes restent exactement les tiens)
-$('sdGrid').__sd = {st: () => sd, sel: i => { sdSel = i; sdRender(); }, set: (v, n) => sdSet(v, n)};  // pour le test « local »
+{
+  const g = [...'530070000600195000098000060800060003400803001700020006060000280000419005000080079'].map(Number), seen = new Set(); let ok = true, n = 0;
+  for (let t; (t = sdTech(g)); n++) { g[t.i] = t.v; seen.add(t.tech); if (sdSolve(g.slice()) !== 1) { ok = false; break; } }
+  const pair = Array(81).fill(0); [1, 2, 3, 4, 5, 6, 7].forEach((d, k) => pair[2 + k] = d);  // ligne 1 : 1 à 7 posés ; restent 8 et 9 pour deux cases
+  const cp = sdCands(pair); const pairOk = sdBits(cp[0]).join() === '8,9' && sdBits(cp[1]).join() === '8,9';
+  const res = ok && n === 51 && !g.includes(0) && seen.has('dernière') && pairOk ? 'ok' : 'raté ' + [ok, n, [...seen]].join(' ');
+  $('sdGrid').dataset.techcheck = res; console.assert(res === 'ok', 'sudoku indices', res);
+}
+$('sdGrid').__sd = {tech: () => sdTech(sd.cur), help: () => sdHelp, st: () => sd, sel: i => { sdSel = i; sdRender(); }, set: (v, n) => sdSet(v, n)};  // pour le test « local »
   // ---- fin ----
   ctx.onOpen(() => { sd ? sdRender() : sdOpen(); });
 }
