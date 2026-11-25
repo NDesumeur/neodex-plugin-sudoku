@@ -4,7 +4,7 @@
  "Ce plugin doit être approuvé par NeoDex pour s'ouvrir.": "This plugin must be approved by NeoDex to open.",
  "Clavier : chiffres pour remplir, Maj + chiffre (ou N) pour les notes, flèches pour bouger, Retour arrière pour effacer, Ctrl + Z pour annuler. La grille en cours est gardée.": "Keyboard: numbers to fill, Shift + number (or N) for notes, arrows to move, Backspace to erase, Ctrl + Z to cancel. The current grid is kept.",
  "Delete": "Delete",
- "Diabolique": "Diabolical",
+ "Diabolique": "Fiendish",
  "Difficile": "Hard",
  "Effacer": "Erase",
  "Erreurs :": "Errors:",
@@ -89,5 +89,18 @@
  "ou": "or",
  "Des grilles générées à la volée et toujours à solution unique, en cinq niveaux, de Facile (40 chiffres donnés) à Diabolique (21). Notes au crayon qui se nettoient toutes seules, surlignage des cases liées, annulation, indices, erreurs à montrer ou non, jeu complet au clavier ; meilleur temps par niveau et partie en cours gardée. Nouveau style pixel art : grille claire et grande qui suit la taille de la fenêtre, du petit portable au grand écran. Les indices expliquent la technique (paire nue, seule place…) avant de poser le chiffre.": "Grids generated on the fly and always with a single solution, in five levels, from Easy (40 digits given) to Diabolical (21). Pencil notes that clean themselves up, highlighting of related cells, undo, hints, mistakes shown or hidden, full keyboard play; best time per level and the game in progress kept. New pixel art style: a clear, big grid that follows the size of the window, from a small laptop to a big screen. Hints explain the technique (naked pair, only place…) before placing the number.",
  "dernière": "last",
- "raté": "failed"
+ "raté": "failed",
+ "Première grille": "First grid",
+ "Résoudre une grille": "Solve a grid",
+ "Ça se corse": "Getting serious",
+ "Résoudre une grille Difficile": "Solve a Hard grid",
+ "Résoudre une grille Diabolique": "Solve a Fiendish grid",
+ "Sans faute": "Flawless",
+ "Résoudre une grille Difficile ou plus dure sans erreur ni indice": "Solve a Hard or harder grid with no mistakes and no hints",
+ "Rapide": "Quick",
+ "Résoudre une grille Facile en moins de 5 minutes": "Solve an Easy grid in under 5 minutes",
+ "Maître du crayon": "Pencil master",
+ "Résoudre une grille Expert en moins de 15 minutes": "Solve an Expert grid in under 15 minutes",
+ "Cinquante grilles": "Fifty grids",
+ "Résoudre 50 grilles": "Solve 50 grids"
 }

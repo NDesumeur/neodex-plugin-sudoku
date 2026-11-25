@@ -327,6 +327,9 @@ export default async function (ctx) {
   const saveGames = () => { clearTimeout(gamesTimer); gamesTimer = setTimeout(() => { gamesTimer = null; folder.write('games', games).catch(() => {}); }, 500); };
   const best = (k, v, higher = true) => { const b = games.best[k]; if (b == null || (higher ? v > b : v < b)) { games.best[k] = v; saveGames(); return true; } return false; };
   const gstore = (k, init) => (games[k] ??= init);  // la section d'un jeu
+  // les trophées de NeoDex (3.4.8 et plus) : succès et records déclarés dans plugin.json ; sur un NeoDex plus ancien, rien ne se passe
+  const trophy = id => { ctx.games?.unlock(id).catch(() => {}); };
+  const trophyRecord = (id, v) => { if (v != null && Number.isFinite(+v)) ctx.games?.record(id, +v).catch(() => {}); };
 function gameLoop(st, appKey, update, draw) {
   cancelAnimationFrame(st.raf);
   const STEP = 1000 / 60; let acc = 0, last = performance.now();
@@ -450,8 +453,15 @@ function sdSet(v, note = sdNotes) {
       for (let j = 0; j < 81; j++) if (Math.floor(j / 9) === Math.floor(i / 9) || j % 9 === i % 9 || (Math.floor(j / 27) === Math.floor(i / 27) && Math.floor(j % 9 / 3) === Math.floor(i % 9 / 3))) sd.notes[j] &= ~(1 << v);
     }
   }
-  if (sd.cur.every((v, k) => v === sd.sol[k])) { sd.done = true; const st = gstore('sudokuStats', {}); st[sd.lvl] = (st[sd.lvl] || 0) + 1; if (best('sudoku' + sd.lvl, sd.secs, false)) toast('Nouveau record : ' + clock(sd.secs)); sfx('launch'); }
+  if (sd.cur.every((v, k) => v === sd.sol[k])) { sd.done = true; const st = gstore('sudokuStats', {}); st[sd.lvl] = (st[sd.lvl] || 0) + 1; if (best('sudoku' + sd.lvl, sd.secs, false)) toast('Nouveau record : ' + clock(sd.secs)); sfx('launch'); if (!sd.mistakes && !sd.hints && ['difficile', 'expert', 'diabolique'].includes(sd.lvl)) trophy('parfaite'); sdTrophies(); }
   saveGames(); sdRender();
+}
+// les trophées, tirés des grilles résolues et des records (aussi à l'ouverture : ce qui a été fait avant compte)
+function sdTrophies() {
+  const st = games.sudokuStats || {}, b = k => games.best['sudoku' + k], n = Object.values(st).reduce((t, x) => t + (+x || 0), 0);
+  for (const k of Object.keys(SD_LEVELS)) trophyRecord(k, b(k));
+  if (n) trophy('premiere'); if (st.difficile) trophy('difficile'); if (st.diabolique) trophy('diabolique');
+  if (b('facile') < 300) trophy('eclair'); if (b('expert') < 900) trophy('expert-rapide'); if (n >= 50) trophy('cinquante');
 }
 function sdRender() {
   const show = $('sdErrors').checked, sel = sdSel, sv = sd.cur[sel];
@@ -509,5 +519,5 @@ document.addEventListener('keydown', e => {
 }
 $('sdGrid').__sd = {tech: () => sdTech(sd.cur), help: () => sdHelp, st: () => sd, sel: i => { sdSel = i; sdRender(); }, set: (v, n) => sdSet(v, n)};  // pour le test « local »
   // ---- fin ----
-  ctx.onOpen(() => { sd ? sdRender() : sdOpen(); });
+  ctx.onOpen(() => { sd ? sdRender() : sdOpen(); sdTrophies(); });
 }
